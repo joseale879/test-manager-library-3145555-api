@@ -14,20 +14,27 @@ final class Book
 {
     private string $title;
 
+    private string $author;
+
+    private string $categoryId;
+
     private int $availableCopies;
 
     private Quantity $totalCopies;
+
+    private ?string $coverKey;
 
     private ?DateTimeImmutable $deletedAt;
 
     private function __construct(
         private readonly string $id,
         string $title,
-        private readonly string $author,
+        string $author,
         private readonly Isbn $isbn,
-        private readonly string $categoryId,
+        string $categoryId,
         Quantity $totalCopies,
         int $availableCopies,
+        ?string $coverKey,
         ?DateTimeImmutable $deletedAt,
     ) {
         $this->title = self::normalizeTitle($title);
@@ -41,7 +48,10 @@ final class Book
         }
 
         $this->totalCopies = $totalCopies;
+        $this->author = $author;
+        $this->categoryId = $categoryId;
         $this->availableCopies = $availableCopies;
+        $this->coverKey = self::validateCoverKey($coverKey);
         $this->deletedAt = $deletedAt;
     }
 
@@ -52,6 +62,7 @@ final class Book
         Isbn $isbn,
         string $categoryId,
         Quantity $totalCopies,
+        ?string $coverKey = null,
     ): self {
         return new self(
             $id,
@@ -61,6 +72,7 @@ final class Book
             $categoryId,
             $totalCopies,
             $totalCopies->value(),
+            $coverKey,
             null,
         );
     }
@@ -74,6 +86,7 @@ final class Book
         Quantity $totalCopies,
         int $availableCopies,
         ?DateTimeImmutable $deletedAt,
+        ?string $coverKey = null,
     ): self {
         return new self(
             $id,
@@ -83,6 +96,7 @@ final class Book
             $categoryId,
             $totalCopies,
             $availableCopies,
+            $coverKey,
             $deletedAt,
         );
     }
@@ -111,6 +125,8 @@ final class Book
 
     public function changeTotalCopies(Quantity $totalCopies): void
     {
+        $this->assertActive();
+
         $availableAfterChange = $this->availableCopies + $totalCopies->value() - $this->totalCopies->value();
 
         if ($availableAfterChange < 0) {
@@ -119,6 +135,29 @@ final class Book
 
         $this->totalCopies = $totalCopies;
         $this->availableCopies = $availableAfterChange;
+    }
+
+    public function edit(string $title, string $author, string $categoryId, Quantity $totalCopies): void
+    {
+        $this->assertActive();
+        $normalizedTitle = self::normalizeTitle($title);
+        $availableAfterChange = $this->availableCopies + $totalCopies->value() - $this->totalCopies->value();
+
+        if ($availableAfterChange < 0) {
+            throw new DomainException('Total copies cannot be lower than the number of borrowed copies.');
+        }
+
+        $this->title = $normalizedTitle;
+        $this->author = $author;
+        $this->categoryId = $categoryId;
+        $this->totalCopies = $totalCopies;
+        $this->availableCopies = $availableAfterChange;
+    }
+
+    public function changeCoverKey(?string $coverKey): void
+    {
+        $this->assertActive();
+        $this->coverKey = self::validateCoverKey($coverKey);
     }
 
     public function retire(DateTimeImmutable $at): void
@@ -159,6 +198,11 @@ final class Book
         return $this->categoryId;
     }
 
+    public function coverKey(): ?string
+    {
+        return $this->coverKey;
+    }
+
     public function totalCopies(): Quantity
     {
         return $this->totalCopies;
@@ -188,6 +232,15 @@ final class Book
         }
 
         return $normalized;
+    }
+
+    private static function validateCoverKey(?string $coverKey): ?string
+    {
+        if ($coverKey !== null && trim($coverKey) === '') {
+            throw new InvalidArgumentException('Cover key cannot be empty.');
+        }
+
+        return $coverKey;
     }
 
     private function assertActive(): void
