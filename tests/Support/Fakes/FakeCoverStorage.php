@@ -5,20 +5,29 @@ declare(strict_types=1);
 namespace Tests\Support\Fakes;
 
 use App\Application\Ports\Outbound\CoverStorage;
+use App\Application\Ports\Outbound\StoredCover;
 
 final class FakeCoverStorage implements CoverStorage
 {
     /** @var list<string> */
     public array $deletedKeys = [];
 
-    /** @var list<array{contents: string, mediaType: string}> */
+    /** @var array<string, string> */
     public array $storedFiles = [];
 
-    public function store(string $contents, string $mediaType): string
+    public function store(string $contents): string
     {
-        $this->storedFiles[] = ['contents' => $contents, 'mediaType' => $mediaType];
+        $key = 'opaque-cover-key-'.(count($this->storedFiles) + 1);
+        $this->storedFiles[$key] = $contents;
 
-        return 'opaque-cover-key-'.count($this->storedFiles);
+        return $key;
+    }
+
+    public function read(string $coverKey): ?StoredCover
+    {
+        return isset($this->storedFiles[$coverKey])
+            ? new StoredCover($this->storedFiles[$coverKey], 'image/png')
+            : null;
     }
 
     public function delete(string $coverKey): void

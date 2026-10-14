@@ -19,7 +19,7 @@ final readonly class SetBookCoverService
         private CoverStorage $covers,
     ) {}
 
-    public function execute(User $actor, string $bookId, string $contents, string $mediaType): Book
+    public function execute(User $actor, string $bookId, string $contents): Book
     {
         if ($actor->role() !== UserRole::ADMIN) {
             throw new ForbiddenRole('Only an admin can change book covers.');
@@ -32,7 +32,7 @@ final readonly class SetBookCoverService
         }
 
         $previousCoverKey = $book->coverKey();
-        $newCoverKey = $this->covers->store($contents, $mediaType);
+        $newCoverKey = $this->covers->store($contents);
         $book->changeCoverKey($newCoverKey);
         $this->books->save($book);
 

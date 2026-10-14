@@ -169,12 +169,11 @@ final class BookServicesTest extends TestCase
         $covers = new FakeCoverStorage;
         $service = new SetBookCoverService($books, $covers);
 
-        $updated = $service->execute($this->admin(), 'book-1', 'binary-content', 'image/png');
+        $updated = $service->execute($this->admin(), 'book-1', 'binary-content');
 
         self::assertSame('opaque-cover-key-1', $updated->coverKey());
         self::assertSame(['old-cover'], $covers->deletedKeys);
-        self::assertSame('binary-content', $covers->storedFiles[0]['contents']);
-        self::assertSame('image/png', $covers->storedFiles[0]['mediaType']);
+        self::assertSame('binary-content', $covers->storedFiles['opaque-cover-key-1']);
     }
 
     public function test_removing_a_cover_clears_the_key_before_deleting_the_file(): void

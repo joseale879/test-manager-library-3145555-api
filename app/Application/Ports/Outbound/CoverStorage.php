@@ -6,7 +6,9 @@ namespace App\Application\Ports\Outbound;
 
 interface CoverStorage
 {
-    public function store(string $contents, string $mediaType): string;
+    public function store(string $contents): string;
+
+    public function read(string $coverKey): ?StoredCover;
 
     public function delete(string $coverKey): void;
 }
