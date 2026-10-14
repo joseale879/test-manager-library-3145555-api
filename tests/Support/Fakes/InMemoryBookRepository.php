@@ -35,6 +35,21 @@ final class InMemoryBookRepository implements BookRepository
         return $book?->isActive() ? $book : null;
     }
 
+    public function findActiveByIds(array $ids): array
+    {
+        $books = [];
+
+        foreach ($ids as $id) {
+            $book = $this->findActiveById($id);
+
+            if ($book !== null) {
+                $books[$id] = $book;
+            }
+        }
+
+        return $books;
+    }
+
     public function findActiveByIsbn(Isbn $isbn, ?string $excludingId = null): ?Book
     {
         foreach ($this->books as $book) {

@@ -8,11 +8,19 @@ use App\Application\Ports\Outbound\CategoryRepository;
 
 final class InMemoryCategoryRepository implements CategoryRepository
 {
-    /** @param list<string> $categoryIds */
-    public function __construct(private readonly array $categoryIds = ['category-1', 'category-2']) {}
+    /** @param array<string, string> $categoryNames */
+    public function __construct(private readonly array $categoryNames = [
+        'category-1' => 'Reference',
+        'category-2' => 'Fiction',
+    ]) {}
 
     public function exists(string $categoryId): bool
     {
-        return in_array($categoryId, $this->categoryIds, true);
+        return array_key_exists($categoryId, $this->categoryNames);
+    }
+
+    public function nameForId(string $categoryId): ?string
+    {
+        return $this->categoryNames[$categoryId] ?? null;
     }
 }

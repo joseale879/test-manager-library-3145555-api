@@ -13,6 +13,11 @@ interface BookRepository
 {
     public function findActiveById(string $id): ?Book;
 
+    /** @param list<string> $ids
+     * @return array<string, Book> keyed by book id
+     */
+    public function findActiveByIds(array $ids): array;
+
     public function findActiveByIsbn(Isbn $isbn, ?string $excludingId = null): ?Book;
 
     public function hasOpenLoans(string $bookId): bool;
