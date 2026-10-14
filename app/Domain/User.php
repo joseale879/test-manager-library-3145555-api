@@ -21,17 +21,24 @@ final readonly class User
         string $passwordHash,
         UserRole $role,
     ): self {
-        $normalizedUsername = mb_strtolower(trim($username));
-
-        if ($normalizedUsername === '' || mb_strlen($normalizedUsername) > 120) {
-            throw new InvalidArgumentException('Username must contain between one and 120 characters.');
-        }
+        $normalizedUsername = self::normalizeUsername($username);
 
         if ($passwordHash === '' || mb_strlen($passwordHash) > 512) {
             throw new InvalidArgumentException('Password hash must contain between one and 512 characters.');
         }
 
         return new self($id, $normalizedUsername, $passwordHash, $role);
+    }
+
+    public static function normalizeUsername(string $username): string
+    {
+        $normalizedUsername = mb_strtolower(trim($username));
+
+        if ($normalizedUsername === '' || mb_strlen($normalizedUsername) > 120) {
+            throw new InvalidArgumentException('Username must contain between one and 120 characters.');
+        }
+
+        return $normalizedUsername;
     }
 
     public function id(): string
