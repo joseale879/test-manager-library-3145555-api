@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Support\Fakes;
 
 use App\Application\Ports\Outbound\LoanRepository;
+use App\Application\Services\Results\OverdueRecord;
 use App\Domain\Book;
 use App\Domain\Loan;
 use DateTimeImmutable;
@@ -23,7 +24,15 @@ final class InMemoryLoanRepository implements LoanRepository
     /** @var array<string, Book> */
     private array $savedBooks = [];
 
+    /** @var list<OverdueRecord> */
+    private array $overdueRecords = [];
+
     public int $saveCalls = 0;
+
+    public function findById(string $loanId): ?Loan
+    {
+        return $this->loans[$loanId] ?? null;
+    }
 
     public function countOpenItemsForMember(string $memberId): int
     {
@@ -33,6 +42,11 @@ final class InMemoryLoanRepository implements LoanRepository
     public function hasOverdueItemsForMember(string $memberId, DateTimeImmutable $now): bool
     {
         return $this->overdueMembers[$memberId] ?? false;
+    }
+
+    public function findOverdueItems(DateTimeImmutable $now): array
+    {
+        return $this->overdueRecords;
     }
 
     public function saveWithBooks(Loan $loan, array $books): void
@@ -53,6 +67,12 @@ final class InMemoryLoanRepository implements LoanRepository
     public function setHasOverdueItems(string $memberId, bool $hasOverdueItems): void
     {
         $this->overdueMembers[$memberId] = $hasOverdueItems;
+    }
+
+    /** @param list<OverdueRecord> $records */
+    public function setOverdueRecords(array $records): void
+    {
+        $this->overdueRecords = $records;
     }
 
     public function loan(string $id): ?Loan
